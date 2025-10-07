@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "expo": "^54.0.12",
+    "mysql2": "^3.15.1",
+    "react-dom": "19.1.0",
+    "react-native-web": "^0.21.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
+  }
+}
