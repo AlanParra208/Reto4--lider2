@@ -33,5 +33,16 @@ app.route("/login").post((req, res) => {
         });
     });
     });
+     app.route('/anuncios').get((req, res) => {
+    const query = 'SELECT * FROM anuncio';
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error al consultar la base de datos:', err);
+            return res.status(500).json({ message: 'Error interno del servidor' });
+        }
+        res.json(results);
+    });
+});
 
     module .exports = app;
