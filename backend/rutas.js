@@ -32,9 +32,10 @@ app.route("/login").post((req, res) => {
             message: "Sesión iniciada"
         });
     });
-    });
-     app.route('/anuncios').get((req, res) => {
-    const query = 'SELECT * FROM anuncio';
+});
+
+app.route('/anuncios').get((req, res) => {
+    const query = 'SELECT * FROM datosanuncios';
 
     connection.query(query, (err, results) => {
         if (err) {

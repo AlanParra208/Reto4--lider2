@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, Platform } from 'react-native';
 // --- CAMBIO 1: Importamos axios ---
 import axios from 'axios';
 
@@ -8,7 +8,7 @@ interface Anuncio {
   id_anuncio: number;
   nombre: string;
   tipo: string;
-  descripcion: string;
+  descripción: string;
   precio: number;
   imagen: string;
 }
@@ -17,6 +17,9 @@ export default function ExploreScreen() {
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null); // Estado para manejar errores
+
+  // estilo inline específico para web: permite quiebre de palabras largas sin espacios
+  const webBreakStyle = Platform.OS === 'web' ? { wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal' } : {};
 
   // --- CAMBIO 3: Lógica de carga de datos con Axios ---
   useEffect(() => {
@@ -69,28 +72,39 @@ export default function ExploreScreen() {
         {/* Mostramos el error si existe */}
         {error && <Text style={styles.errorText}>{error}</Text>}
 
-        {/* --- Encabezado de la Tabla --- */}
+        {/* --- Encabezado de la Tabla (alineado con columnas del body) --- */}
         <View style={styles.filaEncabezado}>
-          <Text style={[styles.celdaEncabezado, { flex: 0.5 }]}>ID</Text>
-          <Text style={[styles.celdaEncabezado, { flex: 1 }]}>Imagen</Text>
-          <Text style={[styles.celdaEncabezado, { flex: 1.5 }]}>Nombre</Text>
-          <Text style={[styles.celdaEncabezado, { flex: 1 }]}>Tipo</Text>
-          <Text style={[styles.celdaEncabezado, { flex: 2 }]}>Descripción</Text>
-          <Text style={[styles.celdaEncabezado, { flex: 1, textAlign: 'right' }]}>Precio</Text>
+          <Text style={[styles.celdaEncabezado, styles.headerId]}>ID</Text>
+          <View style={styles.headerImageCell}>
+            <Text style={styles.celdaEncabezado}>Imagen</Text>
+          </View>
+          <Text style={[styles.celdaEncabezado, styles.headerName]}>Nombre</Text>
+          <Text style={[styles.celdaEncabezado, styles.headerTipo]}>Tipo</Text>
+          <Text style={[styles.celdaEncabezado, styles.headerDescripcion]}>Descripción</Text>
+          <Text style={[styles.celdaEncabezado, styles.headerPrecio]}>Precio</Text>
         </View>
 
         {/* --- CAMBIO 4: Ajustamos el FlatList a la nueva interface --- */}
         <FlatList
           data={anuncios}
           keyExtractor={(item) => item.id_anuncio.toString()}
+          contentContainerStyle={{ paddingBottom: 24 }}
           renderItem={({ item }) => (
             <View style={styles.fila}>
-              <Text style={[styles.celda, { flex: 0.5 }]}>{item.id_anuncio}</Text>
-              <Image source={{ uri: item.imagen }} style={styles.imagen} />
-              <Text style={[styles.celda, { flex: 1.5 }]}>{item.nombre}</Text>
-              <Text style={[styles.celda, { flex: 1 }]}>{item.tipo}</Text>
-              <Text style={[styles.celda, { flex: 2 }]}>{item.descripcion}</Text>
-              <Text style={[styles.celda, { flex: 1, textAlign: 'right' }]}>${item.precio.toFixed(2)}</Text>
+              <Text style={[styles.celda, styles.idCell]}>{item.id_anuncio}</Text>
+
+              {/* Imagen en contenedor de ancho fijo para evitar que estire la fila */}
+              <View style={styles.imagenContainer}>
+                <Image source={{ uri: item.imagen }} style={styles.imagen} />
+              </View>
+
+              <Text style={[styles.celda, styles.nombre]} numberOfLines={1} ellipsizeMode="tail">{item.nombre}</Text>
+              <Text style={[styles.celda, styles.tipo, webBreakStyle as any]} numberOfLines={1} ellipsizeMode="tail">{item.tipo}</Text>
+              <Text style={[styles.celda, styles.descripcion, webBreakStyle as any]} numberOfLines={2} ellipsizeMode="tail">{item.descripción}</Text>
+
+              <View style={styles.priceCell}>
+                <Text style={styles.priceText}>${item.precio.toFixed(2)}</Text>
+              </View>
             </View>
           )}
           ListEmptyComponent={
@@ -150,24 +164,84 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  headerId: {
+    width: 40,
+  },
+  headerImageCell: {
+    width: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  headerName: {
+    flex: 1.2,
+  },
+  headerTipo: {
+    flex: 1,
+  },
+  headerDescripcion: {
+    flex: 3,
+  },
+  headerPrecio: {
+    width: 120,
+    textAlign: 'right',
+  },
   fila: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
+    minHeight: 72,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
   celda: {
     fontSize: 14,
     color: '#555',
-    paddingHorizontal: 4,
+    paddingHorizontal: 8,
+    flexShrink: 1,
+    // Allow text to wrap or be truncated via numberOfLines
+    includeFontPadding: false,
   },
   imagen: {
-    width: 40,
-    height: 40,
-    borderRadius: 4,
+    width: 56,
+    height: 56,
+    borderRadius: 6,
+    resizeMode: 'cover',
+  },
+  imagenContainer: {
+    width: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 8,
+  },
+  nombre: {
+    flex: 1.2,
+    fontWeight: '600',
+  },
+  tipo: {
     flex: 1,
+    color: '#666',
+  },
+  idCell: {
+    width: 40,
+    textAlign: 'center',
+  },
+  priceCell: {
+    width: 120,
+    alignItems: 'flex-end',
+    paddingRight: 4,
+  },
+  priceText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '600',
+  },
+  descripcion: {
+    flex: 3,
+    color: '#555',
+    flexWrap: 'wrap',
+    flexShrink: 1,
+    // cross-platform: long words will be truncated by numberOfLines in Text
   },
   contenedorCarga: {
     flex: 1,
