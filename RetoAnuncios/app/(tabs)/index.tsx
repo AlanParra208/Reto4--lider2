@@ -42,10 +42,12 @@ export default function LoginScreen() {
     setCargando(true);
     
     try {
-      const response = await axios.post("http://localhost:3000/login", {
+      const response = await axios.post("https://traceried-enunciatively-stephany.ngrok-free.dev/login", {
         username: usuario,
         password: contrasena,
       });
+      //http://localhost:3000/login
+      //https://traceried-enunciatively-stephany.ngrok-free.dev/login
 
       // CAMBIO: Ahora enviamos un parámetro a la siguiente ruta
       router.push({

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, ActivityIndicator, Platform } from 'react-native';
-// --- CAMBIO 1: Importamos axios ---
 import axios from 'axios';
 
-// --- CAMBIO 2: Ajustamos la interface a tu base de datos ---
+
 interface Anuncio {
   id_anuncio: number;
   nombre: string;
@@ -16,25 +15,20 @@ interface Anuncio {
 export default function ExploreScreen() {
   const [anuncios, setAnuncios] = useState<Anuncio[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState<string | null>(null); // Estado para manejar errores
+  const [error, setError] = useState<string | null>(null);
 
-  // estilo inline específico para web: permite quiebre de palabras largas sin espacios
   const webBreakStyle = Platform.OS === 'web' ? { wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal' } : {};
 
-  // --- CAMBIO 3: Lógica de carga de datos con Axios ---
   useEffect(() => {
     const obtenerAnuncios = async () => {
       try {
-        setError(null); // Reseteamos errores previos
-        // Usamos axios.get para OBTENER datos. Tu login usaba .post para ENVIAR.
-        // ¡IMPORTANTE! Asegúrate que la URL sea la correcta para tu API.
-        const response = await axios.get("http://localhost:3000/anuncios");
-
-        // Guardamos los datos recibidos del servidor en nuestro estado.
+        setError(null);
+        const response = await axios.get("https://traceried-enunciatively-stephany.ngrok-free.dev/anuncios");
+        //http://localhost:3000/anuncios     
+        //https://traceried-enunciatively-stephany.ngrok-free.dev/anuncios
         setAnuncios(response.data);
 
       } catch (err: any) {
-        // Manejo de errores similar a tu pantalla de login
         if (err.response) {
           setError("Error del servidor al cargar los anuncios.");
         } else if (err.request) {
@@ -44,13 +38,12 @@ export default function ExploreScreen() {
         }
         console.error("Error al cargar los anuncios:", err);
       } finally {
-        // Este bloque se ejecuta siempre, asegurando que el 'cargando' se desactive.
         setCargando(false);
       }
     };
 
     obtenerAnuncios();
-  }, []); // El array vacío asegura que esta función se ejecute solo una vez.
+  }, []);
 
   if (cargando) {
     return (
@@ -69,10 +62,8 @@ export default function ExploreScreen() {
       <View style={styles.contenedorTabla}>
         <Text style={styles.tituloTabla}>Registros de Anuncios</Text>
         
-        {/* Mostramos el error si existe */}
         {error && <Text style={styles.errorText}>{error}</Text>}
 
-        {/* --- Encabezado de la Tabla (alineado con columnas del body) --- */}
         <View style={styles.filaEncabezado}>
           <Text style={[styles.celdaEncabezado, styles.headerId]}>ID</Text>
           <View style={styles.headerImageCell}>
@@ -84,18 +75,22 @@ export default function ExploreScreen() {
           <Text style={[styles.celdaEncabezado, styles.headerPrecio]}>Precio</Text>
         </View>
 
-        {/* --- CAMBIO 4: Ajustamos el FlatList a la nueva interface --- */}
         <FlatList
-          data={anuncios}
-          keyExtractor={(item) => item.id_anuncio.toString()}
+          data={Array.isArray(anuncios) ? anuncios : []}
+          keyExtractor={(item, index) => {
+            // Evita crash si item o item.id_anuncio es undefined
+            const anyItem: any = item as any;
+            const key = anyItem && (anyItem.id_anuncio ?? anyItem.id ?? index);
+            return String(key);
+          }}
           contentContainerStyle={{ paddingBottom: 24 }}
           renderItem={({ item }) => (
+            // Protegemos por si item es undefined
             <View style={styles.fila}>
-              <Text style={[styles.celda, styles.idCell]}>{item.id_anuncio}</Text>
+              <Text style={[styles.celda, styles.idCell]}>{item?.id_anuncio ?? ''}</Text>
 
-              {/* Imagen en contenedor de ancho fijo para evitar que estire la fila */}
               <View style={styles.imagenContainer}>
-                <Image source={{ uri: item.imagen }} style={styles.imagen} />
+                <Image source={{ uri: item?.imagen ?? undefined }} style={styles.imagen} />
               </View>
 
               <Text style={[styles.celda, styles.nombre]} numberOfLines={1} ellipsizeMode="tail">{item.nombre}</Text>
@@ -117,10 +112,7 @@ export default function ExploreScreen() {
     </View>
   );
 }
-
-// --- Se agrega un estilo para el texto de error ---
 const styles = StyleSheet.create({
-  // ... (todos tus otros estilos permanecen igual)
   container: {
     flex: 1,
     padding: 20,
@@ -199,7 +191,6 @@ const styles = StyleSheet.create({
     color: '#555',
     paddingHorizontal: 8,
     flexShrink: 1,
-    // Allow text to wrap or be truncated via numberOfLines
     includeFontPadding: false,
   },
   imagen: {
@@ -241,7 +232,6 @@ const styles = StyleSheet.create({
     color: '#555',
     flexWrap: 'wrap',
     flexShrink: 1,
-    // cross-platform: long words will be truncated by numberOfLines in Text
   },
   contenedorCarga: {
     flex: 1,
